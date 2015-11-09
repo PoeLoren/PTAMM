@@ -53,13 +53,16 @@ System::System()
 
   GUI.RegisterCommand("KeyPress", GUICommandCallBack, this);
 
-  
+  cout << "system construct 1" << endl;
+
   mimFrameBW.resize(mVideoSource.Size());
+  cout << "system construct 2" << endl;
+
   mimFrameRGB.resize(mVideoSource.Size());
   // First, check if the camera is calibrated.
   // If not, we need to run the calibration widget.
   Vector<NUMTRACKERCAMPARAMETERS> vTest;
-  
+
   vTest = GV3::get<Vector<NUMTRACKERCAMPARAMETERS> >("Camera.Parameters", ATANCamera::mvDefaultParams, HIDDEN);
   mpCamera = new ATANCamera("Camera");
   mpCamera->SetImageSize(mVideoSource.Size());
@@ -83,7 +86,6 @@ System::System()
   mpARDriver = new ARDriver(*mpCamera, mVideoSource.Size(), mGLWindow, *mpMap);
   mpMapViewer = new MapViewer(mvpMaps, mpMap, mGLWindow);
   mpMapSerializer = new MapSerializer( mvpMaps );
-
   //These commands have to be registered here as they call the classes created above
   GUI.RegisterCommand("NextMap", GUICommandCallBack, mpMapViewer);
   GUI.RegisterCommand("PrevMap", GUICommandCallBack, mpMapViewer);

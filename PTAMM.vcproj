@@ -598,6 +598,10 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="VirtualHand"
+			>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

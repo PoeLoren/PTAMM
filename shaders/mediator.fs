@@ -46,19 +46,21 @@ void main(void) {
 	//}
 	//else{
 	//	gl_FragColor = shadow * gl_Color;
-	//}
+	// }
+
 	if(shadow > 0.99)
 	{
-		gl_FragColor = vec4(shadow * gl_Color.rgb, 0.0);
-		//gl_FragColor = texture2D(MediatorTexture, gl_TexCoord[0].st);
-		//gl_FragColor = vec4(1.0, 0.0, 0.0, 0.0);
+		//gl_FragColor = vec4(shadow * gl_Color.rgb, 0.0);
+		gl_FragColor = texture2D(MediatorTexture, gl_TexCoord[0].st);
 	}
 	else
 	{
 		//gl_FragColor = vec4(1.0, 0.0, 0.0, 0.0);
-		gl_FragColor = texture2D(MediatorTexture, gl_TexCoord[0].st);
+		//gl_FragColor = texture2D(MediatorTexture, gl_TexCoord[0].st);
 
-		//gl_FragColor = vec4(shadow * gl_Color.rgb, 0.0);
+		gl_FragColor = vec4(shadow * texture2D(MediatorTexture, gl_TexCoord[0].st).rgb, 0.0);
 	}
-	//gl_FragColor = vec4(gl_Color.rgb, 0.0);
+	//gl_FragColor = texture2D(MediatorTexture, gl_TexCoord[0].st);
+
+	 //gl_FragColor = vec4(gl_Color.rgb, 0.0);
 }

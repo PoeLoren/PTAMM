@@ -41,12 +41,7 @@ static bool CheckFramebufferStatus();
 		std::vector<std::string> uri;
 		std::vector<std::string> ghosturi;
 
-		//uri.push_back("../vrmlmodels/153.wrl");
-		//ghosturi.push_back("../vrmlmodels/152.wrl");
 		uri.push_back("../vrmlmodels/BMW_2002__2_.wrl");	// 文件路径
-		//uri.push_back("../vrmlmodels/152.wrl");
-		//ghosturi.push_back("../vrmlmodels/152.wrl");
-		//ghosturi.push_back("../vrmlmodels/magic.wrl");
 		ghosturi.push_back("../vrmlmodels/desk.wrl");
 		
 		b.load_url(uri, parameter);	// 加载文件
@@ -203,7 +198,7 @@ static bool CheckFramebufferStatus();
 		//glPushMatrix();
 		//glTranslatef(0,0.6,0.0);
 		glScaled(0.8,0.8,0.8);
-		//glutSolidSphere(0.2, 20, 20);
+		//glTranslatef(-0.8f, 0.0f, -1.0f);
 		std::vector<openvrml::node_ptr> mfn;
 		mfn = b.root_nodes();
 		if (mfn.size() == 0)
@@ -236,7 +231,43 @@ static bool CheckFramebufferStatus();
 		}*/
 		
 	}
-	
+	BOOL SaveDepthFromOpenGl( string lpFileName )  
+	{  
+		glEnable(GL_DEPTH_TEST); 
+		int width = RENDER_WIDTH*SHADOW_MAP_RATIO;
+		int height = RENDER_HEIGHT*SHADOW_MAP_RATIO;   
+
+		int nAlignWidth = width + width%4;  
+		float* pdata = new float[nAlignWidth * height];  
+		memset( pdata, 0, nAlignWidth * height*sizeof(float) );  
+		glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, pdata);  
+
+		cv::Mat depth = cv::Mat::zeros( height, width, CV_32F );
+
+		for ( int i=0; i<height; i++ )
+		{
+			for ( int j=0; j<width; j++ )
+			{
+				//depth.at<float>(i,j) = pdata[(height-1-i)*width+j];
+				float val = pdata[(height-1-i)*width+j];
+				if (val==1)
+				{
+					depth.at<float>(i,j) = 0;
+				}
+				else
+				{
+					depth.at<float>(i,j) = val;
+				}
+			}
+		}
+
+
+		cv::normalize( depth, depth, 0, 255, 32 );
+		cv::imwrite( lpFileName, depth );
+
+		delete[] pdata;  
+		return TRUE;  
+	}  
 	// 用于测试程序，未用到
 	void VrmlGame::TestDrawObject()
 	{
@@ -268,7 +299,7 @@ static bool CheckFramebufferStatus();
 		//glVertex3f(-1.2f, 0.0f, -1.2f);
 		//glVertex3f(-1.2f, 0.0f, 1.2f);
 		//glEnd();
-        glPushMatrix();
+        //glPushMatrix();
 		glScaled(0.8,0.8,0.8);
 		std::vector<openvrml::node_ptr> mfn;
 		mfn = b.root_nodes();
@@ -285,10 +316,11 @@ static bool CheckFramebufferStatus();
 				Draw3DFromVRML(vrml_node);	// 从VRML中绘制出来
 			}
 		}
-        glPopMatrix();
+       // glPopMatrix();
+		SaveDepthFromOpenGl("depth.jpg");
 		DrawGhostObject();
 		
-
+		
 		// 绘制滚动小球准备shadow map
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
@@ -452,7 +484,7 @@ static bool CheckFramebufferStatus();
 		
  		Draw3DObject(se3CfromW, mCamera);
 		Draw3DGhost(se3CfromW, mCamera);
-		Draw3DMirror(se3CfromW, mCamera);
+		//Draw3DMirror(se3CfromW, mCamera);
         //test(se3CfromW, mCamera);
 		Draw3DMediator(se3CfromW, mCamera);
 		Draw3DBoundary(se3CfromW, mCamera);
@@ -507,8 +539,8 @@ static bool CheckFramebufferStatus();
 		gluPerspective(90,RENDER_WIDTH/RENDER_HEIGHT,0.1,40000);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
-		gluLookAt(-0.5, 2.5, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);   //设置产生阴影的灯光
-		
+		gluLookAt(-0.2, 3, 2, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);   //设置产生阴影的灯光
+
 		glEnable(GL_CULL_FACE);  //不要忘记剔除前景
 		glCullFace(GL_FRONT);
 		DrawDepthObject();
@@ -563,7 +595,7 @@ static bool CheckFramebufferStatus();
 		af[0]=1.0; af[1]=1.0; af[2]=1.0; af[3]=1.0;
 		glLightfv(GL_LIGHT0, GL_AMBIENT, af);
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, af);
-		af[0]=0.0; af[1]=10.0; af[2]=0.0; af[3]=1.0;
+		af[0]=0.0; af[1]=30.0; af[2]=0.0; af[3]=1.0;
 		glLightfv(GL_LIGHT0, GL_POSITION, af);
 
 		glEnable(GL_CULL_FACE);
@@ -578,7 +610,7 @@ static bool CheckFramebufferStatus();
 		glActiveTexture(GL_TEXTURE6);
 		glBindTexture(GL_TEXTURE_2D, mtexs[TEX_BOX]);
 		ObjectShadow.SetSampler("texture", 6);
-		DrawVirtualObject();	// 通过VRML文件中的三维物体绘制场景中的虚拟物体
+		//DrawVirtualObject();	// 通过VRML文件中的三维物体绘制场景中的虚拟物体
 		//TestDrawObject();
 		glActiveTexture(GL_TEXTURE6);
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -743,21 +775,24 @@ static bool CheckFramebufferStatus();
 		MediatorShadow.UseShader(true);
 		MediatorShadow.SetUniVar("xPixelOffset", (float)(1.0/(RENDER_WIDTH*SHADOW_MAP_RATIO)));
 		MediatorShadow.SetUniVar("yPixelOffset", (float)(1.0/(RENDER_HEIGHT*SHADOW_MAP_RATIO)));
-		
-		glActiveTexture(GL_TEXTURE7);
 		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D,mtexs[TEX_DEPTH]);
+		glActiveTexture(GL_TEXTURE7);
 		MediatorShadow.SetSampler("ShadowMap",7);
+		glBindTexture(GL_TEXTURE_2D,mtexs[TEX_DEPTH]);
+		
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, mtexs[TEX_DESK]);
 		MediatorShadow.SetSampler("MediatorTexture",0);
+		glBindTexture(GL_TEXTURE_2D, mtexs[TEX_DESK]);
+		
 			//中间的正方形 不产生EDGE
 			//glColor4f(0.53725f, 0.5608f, 0.553f, 1.0f);
 			//glActiveTexture(GL_TEXTURE0);
 			//glBindTexture(GL_TEXTURE_2D, 0);
-			DrawMediator();	// 绘制中介面
+			//DrawMediator();	// 绘制中介面
 		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDisable(GL_TEXTURE_2D);
 		glDisable(GL_CULL_FACE);
@@ -863,6 +898,11 @@ static bool CheckFramebufferStatus();
 		glVertex3f(-1.0f, 0.0f, 1.3f);
 		glEnd();
 	}
+	void VrmlGame::Draw3DHand(SE3<> se3CfromW, ATANCamera &mCamera)
+	{
+		
+	}
+
     void VrmlGame::test(SE3<> se3CfromW, ATANCamera &mCamera)
     {
         glBindFramebuffer(GL_FRAMEBUFFER,mfbos[FBO_MED]);
@@ -1419,11 +1459,11 @@ static bool CheckFramebufferStatus();
 					//set color if have color
 					if (vrml_color_node != 0 && !is_vrml_color_per_vertex)
 					{
-						glColor4f(vrml_colors[color_index[num_polygon]][0],vrml_colors[color_index[num_polygon]][1],vrml_colors[color_index[num_polygon]][2], 1.0f);
+						//glColor4f(vrml_colors[color_index[num_polygon]][0],vrml_colors[color_index[num_polygon]][1],vrml_colors[color_index[num_polygon]][2], 1.0f);
 					}
 					else if(vrml_color_node == 0) //如果没有颜色属性，而且没有问题，则默认为白色
 					{
-						//glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+						glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 					}
 					//set normal if polygon
 					if (vrml_normal_node !=0 && !is_vrml_normal_per_vertex)
@@ -1448,9 +1488,10 @@ static bool CheckFramebufferStatus();
 						//set color if per vertex
 						if (vrml_color_node != 0 && is_vrml_color_per_vertex)
 						{
-							glColor4f(vrml_colors[color_index[num_vert]][0],vrml_colors[color_index[num_vert]][1],vrml_colors[color_index[num_vert]][2], 1.0f);
+							//glColor4f(vrml_colors[color_index[num_vert]][0],vrml_colors[color_index[num_vert]][1],vrml_colors[color_index[num_vert]][2], 1.0f);
+							//glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 						}
-
+						
 						//set normal if per vertex
 						if (vrml_normal_node !=0 && is_vrml_normal_per_vertex)
 						{
@@ -1469,6 +1510,7 @@ static bool CheckFramebufferStatus();
 							//glTexCoord2f(vrml_tex_coord[tex_coord_index[num_vert]][0],vrml_tex_coord[tex_coord_index[num_vert]][1]);
 							//std::cout<<vrml_tex_coord[tex_coord_index[num_vert]][0]<<","<<vrml_tex_coord[tex_coord_index[num_vert]][1]<<std::endl;
 						}
+						glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 						glVertex3f(vrml_coord[*it][0],vrml_coord[*it][1],vrml_coord[*it][2]);
 						num_vert++;
 					}

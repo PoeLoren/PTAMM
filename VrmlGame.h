@@ -83,7 +83,7 @@ namespace PTAMM {
 		void Draw3DMediator(SE3<> se3CfromW, ATANCamera &mCamera);  // 绘制中介面
 		void Draw3DBoundary(SE3<> se3CfromW, ATANCamera &mCamera);  // 绘制抠边
 		void Draw3DMirror(SE3<> se3CfromW, ATANCamera &mCamera);    // 绘制镜像
-
+		void Draw3DHand(SE3<> se3CfromW, ATANCamera &mCamera);		// 绘制虚拟手
 		void DrawVirtualObject();	// 通过VRML文件中的三维物体绘制场景中的虚拟物体
 		void TestDrawObject();
 		void DrawDepthObject();	// 画shadow mapping用于绘制阴影的深度图中的物体
